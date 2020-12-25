@@ -36,3 +36,49 @@
     transform: rotate(360deg);
   }
 }
+.MenuWhole{
+
+  width:90%;display:flex
+
+}
+.MenuMain{
+
+  width:70%;
+}
+.menuSearch{
+
+  width:15%;display:flex;
+}
+.menuLink{padding:10px}
+.menuLogin{
+  display: flex;
+  width: 5%;
+}
+.mobileSearch{
+  display: none;
+}
+.tab{
+  min-width: 90px !important;
+  padding: 0px !important;
+}
+
+@media only screen and (max-width: 600px) {
+  .mobileSearch{
+    display:block;
+    width:90%;
+    padding:10px
+  }
+  .MenuMain{
+
+    width:90%;
+  }
+  .menuSearch{
+
+   display: none;
+  }
+  .menuLogin{
+  
+    width: 10%;
+  }
+
+}
