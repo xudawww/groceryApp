@@ -7,12 +7,14 @@ import Landing from './component/Landing';
 import reportWebVitals from './reportWebVitals';
 import { createStore, applyMiddleware,combineReducers} from 'redux';
 import todosReducer from './reducers/rootReducer'
+import sellerReducer from './reducers/sellerReducer'
 import { Auth0Provider } from "@auth0/auth0-react";
 import { useHistory } from "react-router-dom";
 import thunk from 'redux-thunk';
 const store = createStore(
   combineReducers({
-    todosReducer:todosReducer
+    todosReducer:todosReducer,
+    sellerReducer:sellerReducer
   }), 
 applyMiddleware(thunk));
 

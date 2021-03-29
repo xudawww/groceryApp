@@ -1,8 +1,8 @@
 import React, { useState,useEffect} from 'react';
 import { connect } from 'react-redux';
-import {addTodo } from '../actions/action'
-import Paper from '@material-ui/core/Paper';
-import Grid from '@material-ui/core/Grid';
+import {queryProduct} from '../actions/productAction2'
+import {ChangeProductCategory} from '../actions/productCategoryChange'
+import {queryProductMore} from '../actions/productionPagination'
 import Container from "@material-ui/core/Container";
 import { makeStyles } from '@material-ui/core/styles';
 import Card from '@material-ui/core/Card';
@@ -12,11 +12,16 @@ import Button from '@material-ui/core/Button';
 import Typography from '@material-ui/core/Typography';
 import CardMedia from '@material-ui/core/CardMedia';
 import CardActionArea from '@material-ui/core/CardActionArea';
-import Tab from '@material-ui/core/Tab';
-function mapStateToProps(state, ownProps){
-    const { todos } = state.todosReducer
-   return {todo:todos}
-}
+import Skeleton from 'react-loading-skeleton';
+import {
+  BrowserRouter as Router,
+  Switch,
+  Route,
+  Redirect,
+  useHistory,
+  Link
+} from "react-router-dom";
+const mapStateToProps = state => ({ todos: state.todosReducer})
 const useStyles = makeStyles((theme) => ({
   root: {
     flexGrow: 1,
@@ -29,311 +34,207 @@ const useStyles = makeStyles((theme) => ({
 }));
 const mapDispatchToProps = dispatch => {
     return {
-  
-      onAddTodo: todo => {
-
-        dispatch(addTodo(todo));
+      queryProduct: category => {
+        dispatch(queryProduct(category));
+      },
+      queryProductMore: category => {
+        dispatch(queryProductMore(category));
+      },
+      changeProductCategory:category=>{
+        dispatch(ChangeProductCategory(category));
       }
     };
   };
 
- function Products(props){
-  const classes = useStyles();
+function Products(props){
+    let history = useHistory();
+    const menuList =['meat','vege','fruit','seafood','hotpot','snack','drink','cig&alcohol']
+    const classes = useStyles();
     const [auth, setAuth] = React.useState(true);
     const [index, setIndex] = React.useState(3);
     const [anchorEl, setAnchorEl] = React.useState(null);
     const open = Boolean(anchorEl);
-  
+    const [list, setList] = React.useState([]); 
+    const [init, setinit] = React.useState(true); 
+    const [initScroll, setinitScroll] = React.useState(true); 
+    const [gap, setgap] = React.useState(-1); 
+    const [dynamicWidth,setdynamicWidth] =React.useState(null); 
+    const myStateRefLock = React.useRef(false);
+    const myStateRefList = React.useRef(list);
+    const myStateRefCategory = React.useRef(props.url);
+    const scrollEvent=()=>{
+      var totalPageHeight = document.body.scrollHeight; 
+      var scrollPoint = window.scrollY + window.innerHeight;
+      console.log(myStateRefList.current.ifFinishLoad)
+      if((totalPageHeight-scrollPoint)<1 && !myStateRefLock.current&&myStateRefList.current.list.length>1&&!myStateRefList.current.ifFinishLoad) 
+       { console.log(myStateRefList.current.list)
+         let formData = new FormData();
+         myStateRefLock.current = true
+         formData.append('category',  myStateRefCategory.current);
+         formData.append('lastID', myStateRefList.current.list[myStateRefList.current.list.length-1].product.productId);
+          
+         props.queryProductMore(formData)
+         console.log("you're at the bottom of the page");
+         setinitScroll(false)
+       }
+    }
+    const handleResize=()=>{
+       let width ='';
+       if(window.innerWidth<562){width='100%'}
+       else{width=300}
+       setdynamicWidth(width)
 
-
-  
- 
-
+    }
     useEffect(()=>{
-      function handleResize() {
-        if(window.innerWidth<=1000&&window.innerWidth>800){
-          setIndex(4)
+   
+      if(!init)
+        {
+         if(props.url=='/ProductDetail'||props.url=='/uploadProduct'){
+           props.setURL(props.todos.category)
+         }
+         setList([]);
+         myStateRefCategory.current = props.todos.category; 
+         const index = menuList.indexOf(myStateRefCategory.current)
+         console.log(props.todos.products)
+         console.log(props.url)
+         setList(props.todos.products[props.todos.category].list)
+         myStateRefList.current = props.todos.products[props.todos.category];
+         myStateRefLock.current = false;
+          if(initScroll){
+            setinitScroll(false)
+            window.addEventListener('scroll',scrollEvent);
+          }
         }
-        else if(window.innerWidth<=800&&window.innerWidth>523){
-          setIndex(6)
+      if(init)
+        {     
+          let formData = new FormData();
+          formData.append('category', 'drink');
+          props.queryProduct(formData);
+          window.addEventListener("resize", handleResize);
+          setinit(false);
+          handleResize();
         }
-        else if(window.innerWidth<=800&&window.innerWidth>523){
-          setIndex(6)
-        }
-        else if(window.innerWidth<=523){
-          setIndex(12)
-        }
-        else{
-          setIndex(3)
-        }
-      
-      }
-      // handleResize()
-      // window.addEventListener('resize', handleResize)
-    
-
-    },[props])
-  return (<div >
-              <br/>
+  },[props.todos.products,props.url])
+  return (
               <Container maxWidth="lg">
-              <div className={classes.root}>
-                
-                    <Grid container spacing={3}>
-              
-                        <Grid item xs>
-                        <Card >
-                          <CardActionArea>
-                            <CardMedia
-                              component="img"
-                              alt="Contemplative Reptile"
-                              height="240"
-                              image="https://www.fishvish.com/media/catalog/product/cache/1/image/9df78eab33525d08d6e5fb8d27136e95/w/h/whole-chicken-with-skin.jpg"
-                              title="Contemplative Reptile"
-                            />
-                            <CardContent>
-                              <Typography gutterBottom variant="h5" component="h2">
-                                Lizard
-                              </Typography>
-                              <Typography variant="body2" color="textSecondary" component="p">
-                                Lizards are a widespread group of squamate reptiles, with over 6,000 species, ranging
-                                across all continents except Antarctica
-                              </Typography>
-                            </CardContent>
-                          </CardActionArea>
-                          <CardActions>
-                            <Button size="small" color="primary">
-                              Share
-                            </Button>
-                            <Button size="small" color="primary">
-                              Learn More
-                            </Button>
-                          </CardActions>
-                        </Card>
-                        </Grid>
-                        <Grid item xs>
-                        <Card >
-                          <CardActionArea>
-                            <CardMedia
-                              component="img"
-                              alt="Contemplative Reptile"
-                              height="240"
-                              image="https://www.pork.org/wp-content/uploads/2017/10/raw-bacon-cured-TOPIC.jpg"
-                              title="Contemplative Reptile"
-                            />
-                            <CardContent>
-                              <Typography gutterBottom variant="h5" component="h2">
-                                Lizard
-                              </Typography>
-                              <Typography variant="body2" color="textSecondary" component="p">
-                                Lizards are a widespread group of squamate reptiles, with over 6,000 species, ranging
-                                across all continents except Antarctica
-                              </Typography>
-                            </CardContent>
-                          </CardActionArea>
-                          <CardActions>
-                            <Button size="small" color="primary">
-                              Share
-                            </Button>
-                            <Button size="small" color="primary">
-                              Learn More
-                            </Button>
-                          </CardActions>
-                        </Card>
-                        </Grid>
-                        <Grid item xs>
-                          <Card >
-                            <CardActionArea>
-                              <CardMedia
-                                component="img"
-                                alt="Contemplative Reptile"
-                                height="240"
-                                image="https://www.askchefdennis.com/wp-content/uploads/2020/11/rack-of-pork-23-500x375.jpg"
-                                title="Contemplative Reptile"
-                              />
-                              <CardContent>
-                                <Typography gutterBottom variant="h5" component="h2">
-                                  Lizard
-                                </Typography>
-                                <Typography variant="body2" color="textSecondary" component="p">
-                                  Lizards are a widespread group of squamate reptiles, with over 6,000 species, ranging
-                                  across all continents except Antarctica
-                                </Typography>
-                              </CardContent>
-                            </CardActionArea>
-                            <CardActions>
-                              <Button size="small" color="primary">
-                                Share
-                              </Button>
-                              <Button size="small" color="primary">
-                                Learn More
-                              </Button>
-                            </CardActions>
-                          </Card>
-                        
-                        </Grid>
-                      <Grid item xs>
-                        <Card >
-                            <CardActionArea>
-                              <CardMedia
-                                component="img"
-                                alt="Contemplative Reptile"
-                                height="240"
-                                image="https://cdn.britannica.com/68/143268-050-917048EA/Beef-loin.jpg"
-                                title="Contemplative Reptile"
-                              />
-                              <CardContent>
-                                <Typography gutterBottom variant="h5" component="h2">
-                                  Lizard
-                                </Typography>
-                                <Typography variant="body2" color="textSecondary" component="p">
-                                  Lizards are a widespread group of squamate reptiles, with over 6,000 species, ranging
-                                  across all continents except Antarctica
-                                </Typography>
-                              </CardContent>
-                            </CardActionArea>
-                            <CardActions>
-                              <Button size="small" color="primary">
-                                Share
-                              </Button>
-                              <Button size="small" color="primary">
-                                Learn More
-                              </Button>
-                            </CardActions>
-                          </Card>
-                        </Grid>
-                        </Grid>
-                        <Grid container spacing={3}>
-                        <Grid item xs>  
-                          <Card >
-                            <CardActionArea>
-                              <CardMedia
-                                component="img"
-                                alt="Contemplative Reptile"
-                                height="240"
-                                image="https://www.sweetandsavorybyshinee.com/wp-content/uploads/2014/01/Roasted-Rack-of-Lamb-1-500x500.jpg"
-                                title="Contemplative Reptile"
-                              />
-                              <CardContent>
-                                <Typography gutterBottom variant="h5" component="h2">
-                                  Lizard
-                                </Typography>
-                                <Typography variant="body2" color="textSecondary" component="p">
-                                  Lizards are a widespread group of squamate reptiles, with over 6,000 species, ranging
-                                  across all continents except Antarctica
-                                </Typography>
-                              </CardContent>
-                            </CardActionArea>
-                            <CardActions>
-                              <Button size="small" color="primary">
-                                Share
-                              </Button>
-                              <Button size="small" color="primary">
-                                Learn More
-                              </Button>
-                            </CardActions>
-                          </Card>
-                        </Grid>
-                        <Grid item xs>
-                       
-                        <Card >
-                            <CardActionArea>
-                              <CardMedia
-                                component="img"
-                                alt="Contemplative Reptile"
-                                height="240"
-                                image="https://www.specialtyproduce.com/sppics/6719.png"
-                                title="Contemplative Reptile"
-                              />
-                              <CardContent>
-                                <Typography gutterBottom variant="h5" component="h2">
-                                  Lizard
-                                </Typography>
-                                <Typography variant="body2" color="textSecondary" component="p">
-                                  Lizards are a widespread group of squamate reptiles, with over 6,000 species, ranging
-                                  across all continents except Antarctica
-                                </Typography>
-                              </CardContent>
-                            </CardActionArea>
-                            <CardActions>
-                              <Button size="small" color="primary">
-                                Share
-                              </Button>
-                              <Button size="small" color="primary">
-                                Learn More
-                              </Button>
-                            </CardActions>
-                          </Card>
-                        </Grid>
+
+               {!props.todos.loading ? 
+               <div className="grid">
+                  {list.length>0? list.map((ele,i)=>(
+                  <div style={{maxWidth:dynamicWidth}}>
+                    <Card variant="outlined" onClick={()=>{
+                      props.setURL('/ProductDetail');
+                      history.push({
+                        pathname: '/ProductDetail',
+                        state: {id:ele.product.productId}
+                      })
+                      console.log(ele.product.productId)
+                    }}>
+                        <CardActionArea>
+                          <CardMedia
+                            component="img"
+                            alt="Contemplative Reptile"
+                            height="240"
+                            image={ele.imgs[0].url}
+                            title="Contemplative Reptile"
+                          />
+                          <CardContent>
+                            <Typography gutterBottom variant="h5" component="h2">
+                            {ele.product.title}
+                            </Typography>
+                            <Typography variant="body2" color="textSecondary" component="p">
+                            {ele.product.des}
+                            </Typography>
+                          </CardContent>
+                        </CardActionArea>
+                        <CardActions>
+                          <Button size="small" color="primary">
+                            Share
+                          </Button>
+                          <Button size="small" color="primary">
+                            Learn More
+                          </Button>
+                        </CardActions>
+                      </Card>
+                    </div>)): null}
+                    {list.length==3?<div></div>:null}
+                    {list.length==2?<div></div>:null}
+                    {list.length==2?<div></div>:null}
+                  </div>:
+                  <div className="grid"> 
+                      <Card variant="outlined" >
+                        <CardActionArea>
+                          <CardContent>
+                            <Skeleton height={200}/>
+                            <br/><br/>
+                            <Skeleton width={'50%'} height={30}/>
+                            <br/><br/>
+                            <Skeleton height={30}/>
+                          </CardContent>
+                        </CardActionArea>
+                      </Card>
+                      <Card variant="outlined" >
+                        <CardActionArea>
+                          <CardContent>
+                            <Skeleton height={200}/>
+                            <br/><br/>
+                            <Skeleton width={'50%'} height={30}/>
+                            <br/><br/>
+                            <Skeleton height={30}/>
+                          </CardContent>
+                        </CardActionArea>
+                      </Card>
+                      <Card variant="outlined" >
+                        <CardActionArea>
+                          <CardContent>
+                            <Skeleton height={200}/>
+                            <br/><br/>
+                            <Skeleton width={'50%'} height={30}/>
+                            <br/><br/>
+                            <Skeleton height={30}/>
+                          </CardContent>
+                        </CardActionArea>
+                      </Card>
+                      <Card variant="outlined" >
+                        <CardActionArea>
+                          <CardContent>
+                            <Skeleton height={200}/>
+                            <br/><br/>
+                            <Skeleton width={'50%'} height={30}/>
+                            <br/><br/>
+                            <Skeleton height={30}/>
+                          </CardContent>
+                        </CardActionArea>
+                      </Card>
+                      <Card variant="outlined" >
+                        <CardActionArea>
+                          <CardContent>
+                            <Skeleton height={200}/>
+                            <br/><br/>
+                            <Skeleton width={'50%'} height={30}/>
+                            <br/><br/>
+                            <Skeleton height={30}/>
+                          </CardContent>
+                        </CardActionArea>
+                      </Card>
+                      <Card variant="outlined" >
+                        <CardActionArea>
+                          <CardContent>
+                            <Skeleton height={200}/>
+                            <br/><br/>
+                            <Skeleton width={'50%'} height={30}/>
+                            <br/><br/>
+                            <Skeleton height={30}/>
+                          </CardContent>
+                        </CardActionArea>
+                      </Card>
+
+                    </div>}
                   
-                        <Grid item xs>
-                        <Card >
-                            <CardActionArea>
-                              <CardMedia
-                                component="img"
-                                alt="Contemplative Reptile"
-                                height="240"
-                                image=" https://www.burpee.com/dw/image/v2/ABAQ_PRD/on/demandware.static/-/Sites-masterCatalog_Burpee/default/dw4dd5c8b4/Images/Product%20Images/prod000626/prod000626.jpg?sw=320&sh=378&sm=fit"
-                                title="Contemplative Reptile"
-                              />
-                              <CardContent>
-                                <Typography gutterBottom variant="h5" component="h2">
-                                  Lizard
-                                </Typography>
-                                <Typography variant="body2" color="textSecondary" component="p">
-                                  Lizards are a widespread group of squamate reptiles, with over 6,000 species, ranging
-                                  across all continents except Antarctica
-                                </Typography>
-                              </CardContent>
-                            </CardActionArea>
-                            <CardActions>
-                              <Button size="small" color="primary">
-                                Share
-                              </Button>
-                              <Button size="small" color="primary">
-                                Learn More
-                              </Button>
-                            </CardActions>
-                          </Card>
-                        </Grid>
-                        <Grid item xs> 
-                        <Card >
-                            <CardActionArea>
-                              <CardMedia
-                                component="img"
-                                alt="Contemplative Reptile"
-                                height="240"
-                                image="https://www.culinaemundi.com/wp-content/uploads/2018/03/IMG_1113-575x431.jpg"
-                                title="Contemplative Reptile"
-                              />
-                              <CardContent>
-                                <Typography gutterBottom variant="h5" component="h2">
-                                  Lizard
-                                </Typography>
-                                <Typography variant="body2" color="textSecondary" component="p">
-                                  Lizards are a widespread group of squamate reptiles, with over 6,000 species, ranging
-                                  across all continents except Antarctica
-                                </Typography>
-                              </CardContent>
-                            </CardActionArea>
-                            <CardActions>
-                              <Button size="small" color="primary">
-                                Share
-                              </Button>
-                              <Button size="small" color="primary">
-                                Learn More
-                              </Button>
-                            </CardActions>
-                          </Card>
-                        </Grid> 
-                      </Grid> 
-                    
-                   
-                </div>
               </Container>
-   </div>)
+  )
 
 }
-
 export default  connect(
     mapStateToProps,
     mapDispatchToProps

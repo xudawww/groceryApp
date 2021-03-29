@@ -3,5 +3,6 @@ import todosReducer from './rootReducer'
 export default function combinedRootReducer() {
     return combineReducers({
         todosReducer:todosReducer
+        
   })
 }

@@ -1,7 +1,9 @@
 import { ADD_TODO_SUCCESS,
     ADD_TODO_FAILURE,
     ADD_TODO_STARTED,
-    DELETE_TODO} from '../type/type'
+    DELETE_TODO,
+    SET_PRODUCT
+    } from '../type/type'
 
 import axios from 'axios';
 export const addTodo = ({ title, userId }) => {
@@ -29,7 +31,7 @@ export const addTodo = ({ title, userId }) => {
       ...todo
     }
   });
-  
+
   const addTodoStarted = () => ({
     type: ADD_TODO_STARTED
   });
